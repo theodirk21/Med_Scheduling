@@ -15,9 +15,9 @@ public class MedSchedulingProperties {
     @Value(value = "${rabbitMq.queue.name}")
     private String rabbitQueueName;
 
-    @Value(value = "${telegram.bot.token}")
-    private String botToken;
-
-    @Value(value = "${telegram.bot.name}")
-    private String botName;
+//    @Value(value = "${telegram.bot.token}")
+//    private String botToken;
+//
+//    @Value(value = "${telegram.bot.name}")
+//    private String botName;
 }
