@@ -1,15 +1,19 @@
 package com.med.scheduling.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalTime;
 
 @Entity
 @Data
-@Table(name = "Schedule_med")
 @Builder
+@Table(name = "Schedule_med")
+@NoArgsConstructor
+@AllArgsConstructor
 public class ScheduleMed {
 
     @Id
