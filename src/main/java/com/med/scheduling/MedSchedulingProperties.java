@@ -12,9 +12,6 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class MedSchedulingProperties {
 
-    @Value(value = "${rabbitMq.queue.name}")
-    private String rabbitQueueName;
-
     @Value(value = "${telegram.bot.token}")
     private String botToken;
 
