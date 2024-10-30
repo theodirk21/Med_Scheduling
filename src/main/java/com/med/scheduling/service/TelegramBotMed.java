@@ -2,11 +2,11 @@ package com.med.scheduling.service;
 
 import com.med.scheduling.exception.ConvertTimeException;
 import com.med.scheduling.exception.ReminderDayException;
+import com.med.scheduling.exception.TelegramNotWorkingException;
 import com.med.scheduling.models.MedicationState;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.models.UserState;
 import com.med.scheduling.repository.ScheduleRepository;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -110,12 +110,14 @@ public class TelegramBotMed extends TelegramLongPollingBot {
     public void iniciate(String chatId) {
 
             sendMessage(chatId,
-                    "🎉 Bem-vindo ao seu bot de lembretes de medicamentos! 🏥\n" +
-                            "Eu estou aqui para ajudá-lo a lembrar de tomar seus medicamentos.\n\n" +
-                            "Use o comando /adicione_medicamento para agendar um lembrete.\n" +
-                            " Obs: Você pode usar vários dias, como \"segunda,terça\" ou \"todos\" para todos os dias.\n" +
-                            "Você pode também conferir seus agendamentos ja armazenados utilizando o /medicamentos_agendados ou \n" +
-                                    "se preferir deletar algum agendamento só usar o /remover");
+                    """
+                            🎉 Bem-vindo ao seu bot de lembretes de medicamentos! 🏥
+                            Eu estou aqui para ajudá-lo a lembrar de tomar seus medicamentos.
+
+                            Use o comando /adicione_medicamento para agendar um lembrete.
+                             Obs: Você pode usar vários dias, como "segunda,terça" ou "todos" para todos os dias.
+                            Você pode também conferir seus agendamentos ja armazenados utilizando o /medicamentos_agendados ou\s
+                            se preferir deletar algum agendamento só usar o /remover""");
         }
 
     public void addMedication(String chatId, String messageText, UserState userState) {
@@ -202,10 +204,13 @@ public class TelegramBotMed extends TelegramLongPollingBot {
                     validDays.add("domingo");
                     break;
                 default:
-                    sendMessage(chatId, "Um ou mais dias estão incorretos. Por favor, informe os dias novamente." +
-                            "\nLembre-se que precisa se algo como segunda, terça (se forem mais de um dia precisam ser separados por virgula) \n" +
-                            "caso deseje adicionar para todos os dias da semana escreva 'todos'\n" +
-                            "\nCaso queira reiniciar use o /reiniciar");
+                    sendMessage(chatId, """
+                            Um ou mais dias estão incorretos. Por favor, informe os dias novamente.\
+
+                            Lembre-se que precisa se algo como segunda, terça (se forem mais de um dia precisam ser separados por virgula)\s
+                            caso deseje adicionar para todos os dias da semana escreva 'todos'
+
+                            Caso queira reiniciar use o /reiniciar""");
                     throw new ReminderDayException("Dias informados errados");
             }
         }
@@ -241,7 +246,7 @@ public class TelegramBotMed extends TelegramLongPollingBot {
         try {
             execute(messageSender);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+           throw new TelegramNotWorkingException("Telegram teve problemas no envio da mensagem");
         }
     }
 
