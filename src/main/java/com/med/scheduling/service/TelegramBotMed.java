@@ -57,7 +57,7 @@ public class TelegramBotMed extends TelegramLongPollingBot {
             }
             else if (userState != null) {
                 if(userState.getCurrentStep() == MedicationState.AWAITING_DELETE){
-                    deleteScheduleMedications(chatId, messageText);
+                    deleteScheduleMedication(chatId, messageText);
                     return;
                 }
                 addMedication(chatId, messageText, userState);
@@ -70,7 +70,7 @@ public class TelegramBotMed extends TelegramLongPollingBot {
                     break;
                 case "/adicione_medicamento":
                     chatStateService.startInteraction(chatId, MedicationState.AWAITING_DAYS);
-                    sendMessage(chatId.toString(), "Em quais dias você deseja ser lembrado? (Ex.: segunda, quarta, todos)");
+                    sendMessage(chatId, "Em quais dias você deseja ser lembrado? (Ex.: segunda, quarta, todos)");
                     break;
                 case "/medicamentos_agendados":
                     listScheduledMedications(chatId);
@@ -91,16 +91,18 @@ public class TelegramBotMed extends TelegramLongPollingBot {
         sendMessage(chatId, "Para remover um medicamento, digite o ID correspondente.");
     }
 
-    private void deleteScheduleMedications(String chatId, String message) {
+    private void deleteScheduleMedication(String chatId, String message) {
         try {
             Long medicationId = Long.valueOf(message);
             var optionalMed = repository.findById(medicationId);
             if (optionalMed.isPresent() && optionalMed.get().getChatId().equals(chatId)) {
                 repository.delete(optionalMed.get());
                 sendMessage(chatId, "Medicamento removido com sucesso!");
+                chatStateService.endInteraction(chatId);
             } else {
-                sendMessage(chatId, "Medicamento não encontrado ou você não tem permissão para removê-lo. \n" +
-                        "Tente novamente ou tente /reiniciar");
+                sendMessage(chatId, "Medicamento não encontrado ou você não tem permissão para removê-lo.");
+                iniciate(chatId);
+                chatStateService.endInteraction(chatId);
             }
         } catch (NumberFormatException e) {
             sendMessage(chatId, "ID inválido. Informe um número válido.");
