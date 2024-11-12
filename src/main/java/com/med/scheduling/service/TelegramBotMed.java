@@ -7,33 +7,32 @@ import com.med.scheduling.models.MedicationState;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.models.UserState;
 import com.med.scheduling.repository.ScheduleRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.time.*;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class TelegramBotMed extends TelegramLongPollingBot {
 
     private final String botName;
+    private final ChatStateService chatStateService;
+    private final ScheduleRepository repository;
 
-    @Autowired
-    private ScheduleRepository repository;
-
-    @Autowired
-    private ChatStateService chatStateService;
-
-
-
-    public TelegramBotMed(String botName, String botToken) {
+    public TelegramBotMed(String botToken, String botName, ChatStateService chatStateService, ScheduleRepository repository) {
         super(botToken);
         this.botName = botName;
+        this.chatStateService = chatStateService;
+        this.repository = repository;
     }
 
     @Override
@@ -52,12 +51,11 @@ public class TelegramBotMed extends TelegramLongPollingBot {
             if (messageText.equals("/reiniciar")) {
                 chatStateService.endInteraction(chatId);
                 sendMessage(chatId, "Processo reiniciado. Vamos começar de novo.");
-                iniciate(chatId);
+                initiate(chatId);
                 return;
-            }
-            else if (userState != null) {
-                if(userState.getCurrentStep() == MedicationState.AWAITING_DELETE){
-                    deleteScheduleMedications(chatId, messageText);
+            } else if (userState != null) {
+                if (userState.getCurrentStep() == MedicationState.AWAITING_DELETE) {
+                    deleteScheduleMedication(chatId, messageText);
                     return;
                 }
                 addMedication(chatId, messageText, userState);
@@ -66,11 +64,11 @@ public class TelegramBotMed extends TelegramLongPollingBot {
 
             switch (messageText) {
                 case "/iniciar":
-                    iniciate(chatId);
+                    initiate(chatId);
                     break;
                 case "/adicione_medicamento":
                     chatStateService.startInteraction(chatId, MedicationState.AWAITING_DAYS);
-                    sendMessage(chatId.toString(), "Em quais dias você deseja ser lembrado? (Ex.: segunda, quarta, todos)");
+                    sendMessage(chatId, "Em quais dias você deseja ser lembrado? (Ex.: segunda, quarta, todos)");
                     break;
                 case "/medicamentos_agendados":
                     listScheduledMedications(chatId);
@@ -80,53 +78,54 @@ public class TelegramBotMed extends TelegramLongPollingBot {
                     listForDelete(chatId);
                     break;
                 default:
-                    sendMessage(String.valueOf(chatId), "Comando não reconhecido. Use /iniciar para ver as opções.");
+                    sendMessage(String.valueOf(chatId), "Comando inválido. Use /iniciar para ver as opções.");
                     break;
             }
         }
     }
 
-    private void listForDelete(String chatId) {
+    public void initiate(String chatId) {
+        sendMessage(chatId,
+                """
+                        🎉 Bem-vindo ao seu bot de lembretes de medicamentos! 🏥
+                        Eu estou aqui para ajudá-lo a lembrar de tomar seus medicamentos.
+
+                        Use o comando /adicione_medicamento para agendar um lembrete.
+                        Obs: Você pode usar vários dias, como "segunda,terça" ou "todos" para todos os dias.
+                        Você pode também conferir seus agendamentos ja armazenados utilizando o /medicamentos_agendados ou\s
+                        se preferir deletar algum agendamento só usar o /remover""");
+    }
+
+    public void listForDelete(String chatId) {
         listScheduledMedications(chatId);
         sendMessage(chatId, "Para remover um medicamento, digite o ID correspondente.");
     }
 
-    private void deleteScheduleMedications(String chatId, String message) {
+    public void deleteScheduleMedication(String chatId, String message) {
         try {
             Long medicationId = Long.valueOf(message);
             var optionalMed = repository.findById(medicationId);
             if (optionalMed.isPresent() && optionalMed.get().getChatId().equals(chatId)) {
                 repository.delete(optionalMed.get());
                 sendMessage(chatId, "Medicamento removido com sucesso!");
+                chatStateService.endInteraction(chatId);
             } else {
-                sendMessage(chatId, "Medicamento não encontrado ou você não tem permissão para removê-lo. \n" +
-                        "Tente novamente ou tente /reiniciar");
+                sendMessage(chatId, "Medicamento não encontrado ou você não tem permissão para removê-lo.");
+                initiate(chatId); // Chamando o método de inicialização
+                chatStateService.endInteraction(chatId);
             }
         } catch (NumberFormatException e) {
             sendMessage(chatId, "ID inválido. Informe um número válido.");
         }
     }
 
-    public void iniciate(String chatId) {
-
-            sendMessage(chatId,
-                    """
-                            🎉 Bem-vindo ao seu bot de lembretes de medicamentos! 🏥
-                            Eu estou aqui para ajudá-lo a lembrar de tomar seus medicamentos.
-
-                            Use o comando /adicione_medicamento para agendar um lembrete.
-                             Obs: Você pode usar vários dias, como "segunda,terça" ou "todos" para todos os dias.
-                            Você pode também conferir seus agendamentos ja armazenados utilizando o /medicamentos_agendados ou\s
-                            se preferir deletar algum agendamento só usar o /remover""");
-        }
-
     public void addMedication(String chatId, String messageText, UserState userState) {
-        switch (userState.getCurrentStep()){
+        switch (userState.getCurrentStep()) {
             case AWAITING_DAYS:
                 var days = reminderDays(messageText, chatId);
                 userState.setDaysOfWeek(days);
                 chatStateService.updateUserState(chatId, MedicationState.AWAITING_TIME);
-                sendMessage(chatId,"Qual horário? (Ex.: 12:00)");
+                sendMessage(chatId, "Qual horário? (Ex.: 12:00)");
                 break;
             case AWAITING_TIME:
                 var time = convertTime(messageText, chatId);
@@ -137,23 +136,22 @@ public class TelegramBotMed extends TelegramLongPollingBot {
             case AWAITING_NAME:
                 userState.setMedicationName(messageText);
                 chatStateService.endInteraction(chatId);
-                userState.getDaysOfWeek().forEach(day -> {
-                repository.save(ScheduleMed.builder()
-                    .chatId(chatId)
-                    .medicationDay(day.trim())
-                    .medicationTime(userState.getTime())
-                    .medicationName(userState.getMedicationName())
-                    .build());});
+                userState.getDaysOfWeek().forEach(day -> repository.save(ScheduleMed.builder()
+                        .chatId(chatId)
+                        .medicationDay(day.trim())
+                        .medicationTime(userState.getTime())
+                        .medicationName(userState.getMedicationName())
+                        .build()));
                 sendMessage(chatId, "Lembrete de medicamento adicionado com sucesso!");
                 break;
             default:
                 chatStateService.endInteraction(chatId);
                 sendMessage(chatId, "Ocorreu um erro. Por favor, tente novamente.");
                 break;
-            }
         }
+    }
 
-    private LocalTime convertTime(String messageText, String chatId) {
+    public LocalTime convertTime(String messageText, String chatId) {
         LocalTime time = null;
         try {
             time = LocalTime.parse(messageText);
@@ -198,6 +196,7 @@ public class TelegramBotMed extends TelegramLongPollingBot {
                     validDays.add("sexta-feira");
                     break;
                 case "sábado":
+                case "sabado":
                     validDays.add("sábado");
                     break;
                 case "domingo":
@@ -232,12 +231,14 @@ public class TelegramBotMed extends TelegramLongPollingBot {
             messageBuilder.append("ID: ").append(med.getId())
                     .append("\nMedicamento: ").append(med.getMedicationName())
                     .append("\nDia: ").append(med.getMedicationDay())
-                    .append("\nHorário").append(med.getMedicationTime())
+                    .append("\nHorário: ").append(med.getMedicationTime())
+                    .append("\n-----------------------------------")
                     .append("\n\n");
         }
 
         sendMessage(String.valueOf(chatId), messageBuilder.toString());
     }
+
 
     public void sendMessage(String chatId, String message) {
         SendMessage messageSender = new SendMessage();
@@ -246,12 +247,10 @@ public class TelegramBotMed extends TelegramLongPollingBot {
         try {
             execute(messageSender);
         } catch (TelegramApiException e) {
-           throw new TelegramNotWorkingException("Telegram teve problemas no envio da mensagem");
+            throw new TelegramNotWorkingException("Telegram teve problemas no envio da mensagem");
         }
     }
 
-
-    @Override
     public String getBotUsername() {
         return this.botName;
     }
