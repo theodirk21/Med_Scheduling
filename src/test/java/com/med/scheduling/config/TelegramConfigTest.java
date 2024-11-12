@@ -3,7 +3,6 @@ package com.med.scheduling.config;
 import com.med.scheduling.MedSchedulingProperties;
 import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.service.ChatStateService;
-import com.med.scheduling.service.StepsMessage;
 import com.med.scheduling.service.TelegramBotMed;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,12 +20,12 @@ class TelegramConfigTest {
         MedSchedulingProperties properties = mock(MedSchedulingProperties.class);
         ScheduleRepository repository = mock(ScheduleRepository.class);
         ChatStateService chatStateService = mock(ChatStateService.class);
-        StepsMessage stepsMessage = mock(StepsMessage.class);
+
 
         when(properties.getBotName()).thenReturn("testBotName");
         when(properties.getBotToken()).thenReturn("testBotToken");
 
-        TelegramConfig telegramConfig = new TelegramConfig(properties, repository, chatStateService, stepsMessage);
+        TelegramConfig telegramConfig = new TelegramConfig(properties, chatStateService, repository);
         TelegramBotMed telegramBot = telegramConfig.telegramBot();
 
         assertEquals("testBotName", telegramBot.getBotUsername(), "Expected bot name to be 'testBotName'");
@@ -37,12 +36,12 @@ class TelegramConfigTest {
         MedSchedulingProperties properties = mock(MedSchedulingProperties.class);
         ScheduleRepository repository = mock(ScheduleRepository.class);
         ChatStateService chatStateService = mock(ChatStateService.class);
-        StepsMessage stepsMessage = mock(StepsMessage.class);
+
 
         when(properties.getBotName()).thenReturn("testBotName");
         when(properties.getBotToken()).thenReturn("testBotToken");
 
-        TelegramConfig telegramConfig = new TelegramConfig(properties, repository, chatStateService, stepsMessage);
+        TelegramConfig telegramConfig = new TelegramConfig(properties, chatStateService, repository);
 
         try {
             telegramConfig.telegramBot();

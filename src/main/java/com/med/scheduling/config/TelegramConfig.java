@@ -3,11 +3,9 @@ package com.med.scheduling.config;
 import com.med.scheduling.MedSchedulingProperties;
 import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.service.ChatStateService;
-import com.med.scheduling.service.StepsMessage;
 import com.med.scheduling.service.TelegramBotMed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -21,17 +19,18 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 public class TelegramConfig {
 
     private final MedSchedulingProperties properties;
+
     private final ChatStateService chatStateService;
-    private final StepsMessage stepsMessage;
+
+    private final ScheduleRepository repository;
 
     @Bean
-    @Primary
     public TelegramBotMed telegramBot() {
         TelegramBotMed telegramBot = new TelegramBotMed(
-                properties.getBotName(),
                 properties.getBotToken(),
+                properties.getBotName(),
                 chatStateService,
-                stepsMessage
+                repository
         );
         try {
             var telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);

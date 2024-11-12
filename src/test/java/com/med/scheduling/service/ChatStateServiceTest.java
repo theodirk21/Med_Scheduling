@@ -1,14 +1,12 @@
 package com.med.scheduling.service;
 
 import com.med.scheduling.models.MedicationState;
-import com.med.scheduling.models.UserState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
-import resources.TestUtils;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 

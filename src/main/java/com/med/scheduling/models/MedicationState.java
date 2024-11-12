@@ -5,7 +5,8 @@ public enum MedicationState {
     AWAITING_DAYS,
     AWAITING_TIME,
     AWAITING_NAME,
-    AWAITING_DELETE
+    AWAITING_DELETE,
+    ERROR
 
 
 }
