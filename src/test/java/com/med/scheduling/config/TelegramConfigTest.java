@@ -6,20 +6,26 @@ import com.med.scheduling.service.ChatStateService;
 import com.med.scheduling.service.TelegramBotMed;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TelegramConfigTest {
+
+    @Mock
+    private MedSchedulingProperties properties;
+
+    @Mock
+    private ScheduleRepository repository;
+
+    @Mock
+    private ChatStateService chatStateService;
+
     @Test
-    void shouldCreateTelegramBotMedBeanWithCorrectProperties() throws TelegramApiException {
-        MedSchedulingProperties properties = mock(MedSchedulingProperties.class);
-        ScheduleRepository repository = mock(ScheduleRepository.class);
-        ChatStateService chatStateService = mock(ChatStateService.class);
+    void shouldCreateTelegramBotMedBeanWithCorrectProperties()  {
 
 
         when(properties.getBotName()).thenReturn("testBotName");
@@ -33,9 +39,6 @@ class TelegramConfigTest {
     }
     @Test
     void shouldHandleTelegramApiExceptionDuringBotRegistration() {
-        MedSchedulingProperties properties = mock(MedSchedulingProperties.class);
-        ScheduleRepository repository = mock(ScheduleRepository.class);
-        ChatStateService chatStateService = mock(ChatStateService.class);
 
 
         when(properties.getBotName()).thenReturn("testBotName");

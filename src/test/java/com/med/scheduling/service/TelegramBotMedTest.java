@@ -7,7 +7,6 @@ import com.med.scheduling.models.MedicationState;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.models.UserState;
 import com.med.scheduling.repository.ScheduleRepository;
-import org.hibernate.query.sqm.sql.ConversionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,11 +41,18 @@ class TelegramBotMedTest {
     @Mock
     private ScheduleRepository scheduleRepository;
 
+    @Mock
+    private Update update;
+
+    @Mock
+    private Message message;
+
+    @Mock
+    private UserState userState;
 
     @Test
     void testOnUpdateReceived_StartCommand() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -62,9 +68,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_AddMedicationCommand() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
-        UserState userState = mock(UserState.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -127,8 +131,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_Error() {
-        Message message = mock(Message.class);
-        UserState userState = mock(UserState.class);
+
         when(userState.getCurrentStep()).thenReturn(MedicationState.ERROR);
         doNothing().when(telegramBotMed).sendMessage(anyString(), anyString());
 
@@ -141,28 +144,28 @@ class TelegramBotMedTest {
     @Test
      void testAddMedication_InvalidTime() {
         String chatId = "12345";
-        UserState userState = new UserState();
-        userState.setCurrentStep(MedicationState.AWAITING_TIME);
+        UserState userStateReal = new UserState();
+        userStateReal.setCurrentStep(MedicationState.AWAITING_TIME);
         String invalidTimeInput = "notATime";
         doThrow(ConvertTimeException.class).when(telegramBotMed).convertTime(invalidTimeInput, chatId);
 
 
         assertThrows(ConvertTimeException.class, () -> {
-            telegramBotMed.addMedication(chatId, invalidTimeInput, userState);
+            telegramBotMed.addMedication(chatId, invalidTimeInput, userStateReal);
         });
     }
 
     @Test
      void testDeleteScheduleMedication_Success() {
         String chatId = "12345";
-        String message = "1";
-        Long medicationId = Long.valueOf(message);
+        String messageText = "1";
+        Long medicationId = Long.valueOf(messageText);
         ScheduleMed medication = new ScheduleMed(medicationId, chatId, "segunda-feira",
                 LocalTime.of(12,0), "Paracetamol");
         doNothing().when(telegramBotMed).sendMessage(anyString(), anyString());
         when(scheduleRepository.findById(medicationId)).thenReturn(Optional.of(medication));
 
-        telegramBotMed.deleteScheduleMedication(chatId, message);
+        telegramBotMed.deleteScheduleMedication(chatId, messageText);
 
         verify(scheduleRepository, times(1)).delete(medication);
         verify(telegramBotMed).sendMessage(chatId, "Medicamento removido com sucesso!");
@@ -172,13 +175,13 @@ class TelegramBotMedTest {
     @Test
      void testDeleteScheduleMedication_MedicationNotFound() {
         String chatId = "12345";
-        String message = "1";
-        Long medicationId = Long.valueOf(message);
+        String messageText = "1";
+        Long medicationId = Long.valueOf(messageText);
 
         when(scheduleRepository.findById(medicationId)).thenReturn(Optional.empty());
         doNothing().when(telegramBotMed).sendMessage(anyString(), anyString());
 
-        telegramBotMed.deleteScheduleMedication(chatId, message);
+        telegramBotMed.deleteScheduleMedication(chatId, messageText);
 
         verify(telegramBotMed).sendMessage(chatId, "Medicamento não encontrado ou você não tem permissão para removê-lo.");
         verify(chatStateService, times(1)).endInteraction(chatId);
@@ -187,19 +190,18 @@ class TelegramBotMedTest {
     @Test
      void testDeleteScheduleMedication_InvalidId() {
         String chatId = "12345";
-        String message = "notANumber";
+        String messageText = "notANumber";
 
         doNothing().when(telegramBotMed).sendMessage(anyString(), anyString());
 
-        telegramBotMed.deleteScheduleMedication(chatId, message);
+        telegramBotMed.deleteScheduleMedication(chatId, messageText);
 
         verify(telegramBotMed).sendMessage(chatId, "ID inválido. Informe um número válido.");
     }
 
     @Test
     void testOnUpdateReceived_ScheduledMedicationsCommand() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -214,8 +216,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_RemoveCommand() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -231,8 +232,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_UnrecognizedCommand() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -247,8 +247,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_ReiniciarCommand() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -266,8 +265,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_AwaitingDeleteState() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -275,7 +273,6 @@ class TelegramBotMedTest {
         when(message.getChatId()).thenReturn(12345L);
         doNothing().when(telegramBotMed).sendMessage(any(), any());
 
-        UserState userState = mock(UserState.class);
         when(chatStateService.getUserState("12345")).thenReturn(userState);
         when(userState.getCurrentStep()).thenReturn(MedicationState.AWAITING_DELETE);
 
@@ -286,8 +283,7 @@ class TelegramBotMedTest {
 
     @Test
     void testOnUpdateReceived_ExistingUserState() {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
+
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.hasText()).thenReturn(true);
@@ -295,7 +291,6 @@ class TelegramBotMedTest {
         when(message.getChatId()).thenReturn(12345L);
         doNothing().when(telegramBotMed).sendMessage(any(), any());
 
-        UserState userState = mock(UserState.class);
         when(chatStateService.getUserState("12345")).thenReturn(userState);
         when(userState.getCurrentStep()).thenReturn(MedicationState.AWAITING_DAYS);
         telegramBotMed.onUpdateReceived(update);
@@ -320,8 +315,7 @@ class TelegramBotMedTest {
         String chatId = "12345";
         String messageText = "Hello, World!";
 
-        Message mockResponse = mock(Message.class);
-        doReturn(mockResponse).when(telegramBotMed).execute(any(SendMessage.class));
+        doReturn(message).when(telegramBotMed).execute(any(SendMessage.class));
 
         telegramBotMed.sendMessage(chatId, messageText);
 
