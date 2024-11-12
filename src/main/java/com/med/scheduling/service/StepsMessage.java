@@ -77,13 +77,12 @@ private final ChatStateService chatStateService;
             case AWAITING_NAME:
                 userState.setMedicationName(messageText);
                 chatStateService.endInteraction(chatId);
-                userState.getDaysOfWeek().forEach(day -> {
-                    repository.save(ScheduleMed.builder()
-                            .chatId(chatId)
-                            .medicationDay(day.trim())
-                            .medicationTime(userState.getTime())
-                            .medicationName(userState.getMedicationName())
-                            .build());});
+                userState.getDaysOfWeek().forEach(day -> repository.save(ScheduleMed.builder()
+                        .chatId(chatId)
+                        .medicationDay(day.trim())
+                        .medicationTime(userState.getTime())
+                        .medicationName(userState.getMedicationName())
+                        .build()));
                 telegramBotMed.sendMessage(chatId, "Lembrete de medicamento adicionado com sucesso!");
                 break;
             default:
@@ -93,7 +92,7 @@ private final ChatStateService chatStateService;
         }
     }
 
-    private LocalTime convertTime(String messageText, String chatId) {
+    public LocalTime convertTime(String messageText, String chatId) {
         LocalTime time = null;
         try {
             time = LocalTime.parse(messageText);

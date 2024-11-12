@@ -4,30 +4,33 @@ import com.med.scheduling.exception.TelegramNotWorkingException;
 import com.med.scheduling.models.MedicationState;
 import com.med.scheduling.models.UserState;
 import com.med.scheduling.repository.ScheduleRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
+@Component
+
 public class TelegramBotMed extends TelegramLongPollingBot {
 
     private final String botName;
 
-    @Autowired
-    private ScheduleRepository repository;
+    private final ChatStateService chatStateService;
 
-    @Autowired
-    private ChatStateService chatStateService;
+    private final StepsMessage stepsMessage;
 
-    @Autowired
-    private StepsMessage stepsMessage;
-
-    public TelegramBotMed(String botName, String botToken) {
+    public TelegramBotMed(String botName, String botToken, ChatStateService chatStateService
+    , StepsMessage stepsMessage) {
         super(botToken);
         this.botName = botName;
+        this.chatStateService = chatStateService;
+        this.stepsMessage = stepsMessage;
+
     }
 
     @Override
