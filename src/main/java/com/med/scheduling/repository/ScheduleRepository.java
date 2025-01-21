@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<ScheduleMed, Long> {
+
     List<ScheduleMed> findByChatId(String chatId);
 
     List<ScheduleMed> findByMedicationDayAndMedicationTime(String localDate, LocalTime localTime);
