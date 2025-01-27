@@ -1,0 +1,131 @@
+package com.med.scheduling.controller;
+
+import com.med.scheduling.dto.MedsFilterDTO;
+import com.med.scheduling.dto.MedsRequestDTO;
+import com.med.scheduling.dto.MedsResponseDTO;
+import com.med.scheduling.dto.MedsResponseIdDTO;
+import com.med.scheduling.service.MedService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.ws.rs.PathParam;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.*;
+import org.springdoc.core.annotations.ParameterObject;
+
+import java.net.URI;
+import java.time.LocalTime;
+import java.util.List;
+
+@Validated
+@RestController
+@RequiredArgsConstructor
+@Tag(name = "med-verification", description = "Controle de salvamentos no banco de dados")
+public class MedController {
+
+    private final MedService medSerice;
+
+    @Operation(
+            summary = "Lista de medicamentos cadastrados na base", //
+            description = "Lista todos os medicamentos cadastrados na base", //
+            tags = "med-verification"
+    )
+    @GetMapping()
+    @ApiResponses(value = { //
+            @ApiResponse(responseCode = "200", description = "Lista de medicamentos cadastrados na base"), //
+            @ApiResponse(responseCode = "400", description = "An bad request!"),//
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+    })
+    public ResponseEntity<List<MedsResponseDTO>> findAllMeds() {
+        return ResponseEntity.ok(medSerice.findAllMeds());
+    }
+
+    @Operation(
+            summary = "Lista medicamentos pelo filtro usado", //
+            description = "Lista medicamentos pelo filtro usado", //
+            tags = "med-verification"
+    )
+    @GetMapping()
+    @ApiResponses(value = { //
+            @ApiResponse(responseCode = "200", description = "Lista medicamentos pelo filtro usado"), //
+            @ApiResponse(responseCode = "400", description = "An bad request!"),//
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+    })
+    public ResponseEntity<MedsResponseDTO> findMedsByFilter(
+            @PageableDefault Pageable page,
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String chatId,
+            @RequestParam(required = false) String medicationDay,
+            @RequestParam(required = false) LocalTime medicationTime,
+            @RequestParam(required = false) String medicationName
+
+            ) {
+
+        var paramsFilter = new MedsFilterDTO(id, chatId, medicationDay, medicationTime, medicationName);
+
+        return ResponseEntity.ok(medSerice.findMedsByFilter(page, paramsFilter));
+    }
+
+
+    @Operation(
+            summary = "Deletar medicameto pelo chatid e nome ", //
+            description = "Deletar medicameto pelo chatid e nome ", //
+            tags = "med-verification"
+    )
+    @DeleteMapping("/{id}")
+    @ApiResponses(value = { //
+            @ApiResponse(responseCode = "204", description = "Deleta medicameto pelo chatid e nome "), //
+            @ApiResponse(responseCode = "400", description = "An bad request!"),//
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+    })
+    public ResponseEntity<Void> deleteMed(
+            @PathParam("id") Long id
+
+    ) {
+        medSerice.deleteMed(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Cria medicamento na base", //
+            description = "Cria medicamento na base", //
+            tags = "med-verification"
+    )
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = { //
+            @ApiResponse(responseCode = "201", description = "Cria medicamento na base"), //
+            @ApiResponse(responseCode = "400", description = "An bad request!"),//
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+    })
+    public ResponseEntity<MedsResponseIdDTO> createMed(
+            @RequestBody MedsRequestDTO medsRequestDTO
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(medSerice.createMed(medsRequestDTO));
+    }
+
+    @Operation(
+            summary = "Atualiza medicamento na base", //
+            description = "Atualiza medicamento na base", //
+            tags = "med-verification"
+    )
+    @PatchMapping(path = "/{id}",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = { //
+            @ApiResponse(responseCode = "200", description = "Atualiza medicamento na base"), //
+            @ApiResponse(responseCode = "400", description = "An bad request!"),//
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+    })
+    public ResponseEntity<MedsResponseDTO> updateMed(
+            @RequestBody MedsRequestDTO medsRequestDTO,
+            @PathParam("id") Long id
+    ) {
+        return ResponseEntity.ok(medSerice.updateMed(medsRequestDTO, id));
+    }
+}
