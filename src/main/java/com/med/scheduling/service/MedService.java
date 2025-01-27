@@ -46,6 +46,7 @@ public class MedService {
     }
 
 
+    @Transactional
     public MedsResponseDTO updateMed(MedsRequestDTO medsRequestDTO, Long id) {
 
         repository.findById(id).orElseThrow(NotFoundException::new);
@@ -63,13 +64,16 @@ public class MedService {
         return mapper.map(scheduleMed, MedsResponseDTO.class);
     }
 
+    @Transactional
     public void deleteMed(Long id) {
         repository.deleteById(id);
     }
 
     public List<MedsResponseDTO> findAllMeds() {
         List<ScheduleMed> scheduleMeds = repository.findAll();
-        return List.of(mapper.map(scheduleMeds, MedsResponseDTO.class));
+        return scheduleMeds.stream()
+                .map(scheduleMed -> mapper.map(scheduleMed, MedsResponseDTO.class))
+                .toList();
     }
 
     public List<MedsResponseDTO> findMedsByFilter(Pageable page, MedsFilterDTO paramsFilter) {
@@ -80,6 +84,8 @@ public class MedService {
                 paramsFilter.medicationName(),
                 page);
 
-        return Collections.singletonList(mapper.map(medsByFilter, MedsResponseDTO.class));
+        return medsByFilter.stream()
+                .map(filter -> mapper.map(filter, MedsResponseDTO.class))
+                .toList();
     }
 }

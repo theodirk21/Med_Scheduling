@@ -1,17 +1,18 @@
 package com.med.scheduling.controller;
 
-import com.med.scheduling.dto.MedsFilterDTO;
-import com.med.scheduling.dto.MedsRequestDTO;
-import com.med.scheduling.dto.MedsResponseDTO;
-import com.med.scheduling.dto.MedsResponseIdDTO;
+import com.med.scheduling.dto.*;
 import com.med.scheduling.service.MedService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.ws.rs.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -24,6 +25,8 @@ import org.springdoc.core.annotations.ParameterObject;
 import java.net.URI;
 import java.time.LocalTime;
 import java.util.List;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Validated
 @RestController
@@ -40,9 +43,13 @@ public class MedController {
     )
     @GetMapping()
     @ApiResponses(value = { //
-            @ApiResponse(responseCode = "200", description = "Lista de medicamentos cadastrados na base"), //
-            @ApiResponse(responseCode = "400", description = "An bad request!"),//
-            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+            @ApiResponse(responseCode = "200", description = "Lista de medicamentos cadastrados na base"),
+            @ApiResponse(responseCode = "404", description = "Lista não encontrada!", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor!", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            ))
     })
     public ResponseEntity<List<MedsResponseDTO>> findAllMeds() {
         return ResponseEntity.ok(medSerice.findAllMeds());
@@ -53,13 +60,17 @@ public class MedController {
             description = "Lista medicamentos pelo filtro usado", //
             tags = "med-verification"
     )
-    @GetMapping()
+    @GetMapping("/filter/")
     @ApiResponses(value = { //
             @ApiResponse(responseCode = "200", description = "Lista medicamentos pelo filtro usado"), //
-            @ApiResponse(responseCode = "400", description = "An bad request!"),//
-            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+            @ApiResponse(responseCode = "404", description = "Filtro não retornou nada", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor!", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
     })
-    public ResponseEntity<MedsResponseDTO> findMedsByFilter(
+    public ResponseEntity<List<MedsResponseDTO>> findMedsByFilter(
             @PageableDefault Pageable page,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String chatId,
@@ -83,8 +94,12 @@ public class MedController {
     @DeleteMapping("/{id}")
     @ApiResponses(value = { //
             @ApiResponse(responseCode = "204", description = "Deleta medicameto pelo chatid e nome "), //
-            @ApiResponse(responseCode = "400", description = "An bad request!"),//
-            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+            @ApiResponse(responseCode = "404", description = "Item á ser excluido não encontrado", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor!", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
     })
     public ResponseEntity<Void> deleteMed(
             @PathParam("id") Long id
@@ -99,11 +114,15 @@ public class MedController {
             description = "Cria medicamento na base", //
             tags = "med-verification"
     )
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = APPLICATION_JSON_VALUE)
     @ApiResponses(value = { //
-            @ApiResponse(responseCode = "201", description = "Cria medicamento na base"), //
-            @ApiResponse(responseCode = "400", description = "An bad request!"),//
-            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+            @ApiResponse(responseCode = "201", description = "Cria medicamento na base"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos ou ausentes no corpo da requisição", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor!", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
     })
     public ResponseEntity<MedsResponseIdDTO> createMed(
             @RequestBody MedsRequestDTO medsRequestDTO
@@ -116,11 +135,15 @@ public class MedController {
             description = "Atualiza medicamento na base", //
             tags = "med-verification"
     )
-    @PatchMapping(path = "/{id}",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(path = "/{id}",consumes = APPLICATION_JSON_VALUE)
     @ApiResponses(value = { //
             @ApiResponse(responseCode = "200", description = "Atualiza medicamento na base"), //
-            @ApiResponse(responseCode = "400", description = "An bad request!"),//
-            @ApiResponse(responseCode = "500", description = "An unexpected error occurred!") //
+            @ApiResponse(responseCode = "400", description = "Dados inválidos ou ausentes no corpo da requisição", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor!", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
     })
     public ResponseEntity<MedsResponseDTO> updateMed(
             @RequestBody MedsRequestDTO medsRequestDTO,
