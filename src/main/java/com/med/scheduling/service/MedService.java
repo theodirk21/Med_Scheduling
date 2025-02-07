@@ -11,11 +11,9 @@ import com.med.scheduling.repository.projection.CustomScheduleMed;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -71,6 +69,10 @@ public class MedService {
 
     public List<MedsResponseDTO> findAllMeds() {
         List<ScheduleMed> scheduleMeds = repository.findAll();
+
+        if(scheduleMeds.isEmpty()) throw new NotFoundException();
+
+
         return scheduleMeds.stream()
                 .map(scheduleMed -> mapper.map(scheduleMed, MedsResponseDTO.class))
                 .toList();

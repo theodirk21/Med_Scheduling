@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ public class MedController {
             description = "Lista todos os medicamentos cadastrados na base", //
             tags = "med-verification"
     )
-    @GetMapping()
+    @GetMapping("/")
     @ApiResponses(value = { //
             @ApiResponse(responseCode = "200", description = "Lista de medicamentos cadastrados na base"),
             @ApiResponse(responseCode = "404", description = "Lista não encontrada!", content = @Content(
@@ -52,7 +53,13 @@ public class MedController {
             ))
     })
     public ResponseEntity<List<MedsResponseDTO>> findAllMeds() {
-        return ResponseEntity.ok(medSerice.findAllMeds());
+        try {
+            List<MedsResponseDTO> allMeds = medSerice.findAllMeds();
+            return ResponseEntity.ok(allMeds);
+        }catch (NotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @Operation(
@@ -102,7 +109,7 @@ public class MedController {
             )),
     })
     public ResponseEntity<Void> deleteMed(
-            @PathParam("id") Long id
+            @PathVariable("id") Long id
 
     ) {
         medSerice.deleteMed(id);
@@ -137,7 +144,7 @@ public class MedController {
     )
     @PatchMapping(path = "/{id}",consumes = APPLICATION_JSON_VALUE)
     @ApiResponses(value = { //
-            @ApiResponse(responseCode = "200", description = "Atualiza medicamento na base"), //
+            @ApiResponse(responseCode = "200", description = "Atualiza medicamento na base" ), //
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou ausentes no corpo da requisição", content = @Content(
                     mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
             )),
@@ -146,8 +153,8 @@ public class MedController {
             )),
     })
     public ResponseEntity<MedsResponseDTO> updateMed(
-            @RequestBody MedsRequestDTO medsRequestDTO,
-            @PathParam("id") Long id
+            @RequestBody  MedsRequestDTO medsRequestDTO,
+            @PathVariable("id") Long id
     ) {
         return ResponseEntity.ok(medSerice.updateMed(medsRequestDTO, id));
     }

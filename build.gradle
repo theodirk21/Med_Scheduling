@@ -32,8 +32,6 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.powermock:powermock-api-mockito2:2.0.9'
-	testImplementation 'org.powermock:powermock-module-junit4:2.0.9'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

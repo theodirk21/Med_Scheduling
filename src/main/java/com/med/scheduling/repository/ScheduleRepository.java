@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<ScheduleMed, Long> {
@@ -32,4 +33,7 @@ public interface ScheduleRepository extends JpaRepository<ScheduleMed, Long> {
             @Param("medicationName") String medicationName,
             Pageable page
     );
+
+    @Query("SELECT sm FROM ScheduleMed sm")
+   Optional<List<ScheduleMed>> findAllMeds();
 }
