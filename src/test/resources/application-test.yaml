@@ -2,22 +2,27 @@ spring:
     config:
         activate:
             on-profile: test
-
-security:
-    basic:
-        enabled: false
-
-datasource:
-    url: jdbc:h2:mem:db;Mode=Oracle;DB_CLOSE_DELAY=-1;
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: sa
-jpa:
-    hibernate:
-        ddl-auto: create-drop
-    show-sql: false
-    properties:
+    
+    security:
+        basic:
+            enabled: false
+    
+    datasource:
+        url: jdbc:h2:mem:db;Mode=Oracle;DB_CLOSE_DELAY=-1;
+        driver-class-name: org.h2.Driver
+        username: sa
+        password: sa
+    
+    jpa:
         hibernate:
-            dialect: org.hibernate.dialect.H2Dialect
+            ddl-auto: create-drop
+        show-sql: false
+
 main:
     web-application-type: none
+
+
+telegram:
+    bot:
+        token: teste
+        name: teste

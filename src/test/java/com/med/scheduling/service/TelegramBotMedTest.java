@@ -1,6 +1,7 @@
 package com.med.scheduling.service;
 
 import com.med.scheduling.exception.ConvertTimeException;
+import com.med.scheduling.exception.NotFoundException;
 import com.med.scheduling.exception.ReminderDayException;
 import com.med.scheduling.exception.TelegramNotWorkingException;
 import com.med.scheduling.models.MedicationState;
@@ -20,6 +21,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -64,6 +66,8 @@ class TelegramBotMedTest {
 
         verify(telegramBotMed).initiate("12345");
     }
+
+
 
 
     @Test
@@ -146,13 +150,29 @@ class TelegramBotMedTest {
         String chatId = "12345";
         UserState userStateReal = new UserState();
         userStateReal.setCurrentStep(MedicationState.AWAITING_TIME);
-        String invalidTimeInput = "notATime";
-        doThrow(ConvertTimeException.class).when(telegramBotMed).convertTime(invalidTimeInput, chatId);
-
-
-        assertThrows(ConvertTimeException.class, () -> {
-            telegramBotMed.addMedication(chatId, invalidTimeInput, userStateReal);
+        String invalidTimeInput = "25:00";
+        doNothing().when(telegramBotMed).sendMessage(anyString(), anyString());
+        Exception exception = assertThrows(ConvertTimeException.class, () -> {
+            telegramBotMed.convertTime(invalidTimeInput, chatId);
         });
+
+        assertEquals("Formato de hora inválido.", exception.getMessage());
+        verify(telegramBotMed).sendMessage(chatId, "Hora inválida. Use o formato HH:mm.");
+    }
+
+    @Test
+    void testAddMedication_NotATime() {
+        String chatId = "12345";
+        UserState userStateReal = new UserState();
+        userStateReal.setCurrentStep(MedicationState.AWAITING_TIME);
+        String invalidTimeInput = "notATime";
+        doNothing().when(telegramBotMed).sendMessage(anyString(), anyString());
+        Exception exception = assertThrows(ConvertTimeException.class, () -> {
+            telegramBotMed.convertTime(invalidTimeInput, chatId);
+        });
+
+        assertEquals("Formato de hora inválido.", exception.getMessage());
+        verify(telegramBotMed).sendMessage(chatId, "Hora inválida. Use o formato HH:mm.");
     }
 
     @Test
