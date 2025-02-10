@@ -64,27 +64,33 @@ public class MedService {
 
     @Transactional
     public void deleteMed(Long id) {
-        repository.deleteById(id);
+
+        ScheduleMed scheduleMed = repository.findById(id).orElseThrow(NotFoundException::new);
+
+        repository.delete(scheduleMed);
     }
 
     public List<MedsResponseDTO> findAllMeds() {
         List<ScheduleMed> scheduleMeds = repository.findAll();
 
-        if(scheduleMeds.isEmpty()) throw new NotFoundException();
-
-
+        if(scheduleMeds.isEmpty()) {
+            throw new NotFoundException();
+        } else {
         return scheduleMeds.stream()
                 .map(scheduleMed -> mapper.map(scheduleMed, MedsResponseDTO.class))
                 .toList();
+        }
     }
 
     public List<MedsResponseDTO> findMedsByFilter(Pageable page, MedsFilterDTO paramsFilter) {
-        List<CustomScheduleMed> medsByFilter = repository.findMedsByFilter(paramsFilter.id(),
-                paramsFilter.medicationDay(),
-                paramsFilter.medicationDay(),
-                paramsFilter.medicationTime(),
-                paramsFilter.medicationName(),
-                page);
+        List<CustomScheduleMed> medsByFilter = repository.findMedsByFilter(
+                paramsFilter != null ? paramsFilter.id() : null,
+                paramsFilter != null ? paramsFilter.chatId() : null,
+                paramsFilter != null ? paramsFilter.medicationDay() : null,
+                paramsFilter != null ? paramsFilter.medicationTime() : null,
+                paramsFilter != null ? paramsFilter.medicationName() : null,
+                page
+        );
 
         return medsByFilter.stream()
                 .map(filter -> mapper.map(filter, MedsResponseDTO.class))

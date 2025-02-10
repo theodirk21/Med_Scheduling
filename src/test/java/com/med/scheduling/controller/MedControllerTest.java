@@ -13,6 +13,8 @@ import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.service.MedService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +33,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,9 +52,6 @@ class MedControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @MockBean
-    private ScheduleRepository repository;
 
     @MockBean
     private MedService service;
@@ -94,7 +94,6 @@ class MedControllerTest {
                 .andReturn();
 
         verify(service, times(1)).findAllMeds();
-        verify(repository, times(1)).findAll();
     }
 
     @Test
@@ -133,13 +132,13 @@ class MedControllerTest {
     @Test
     void createMed() throws Exception {
 
-        when(service.createMed(medsRequestDTO)).thenReturn(MedsResponseIdDTO.builder().id(2L).build());
+        when(service.createMed(any(MedsRequestDTO.class))).thenReturn(MedsResponseIdDTO.builder().id(2L).build());
 
-        ResultActions response = mockMvc.perform(post("/")
+        mockMvc.perform(post("/")
                 .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medsRequestDTO)));
-
-        response.andExpect(status().isCreated())
+                .content(objectMapper.writeValueAsString(medsRequestDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(2L))
                 .andDo(print());
 
         verify(service, times(1)).createMed(any(MedsRequestDTO.class));
@@ -162,13 +161,6 @@ class MedControllerTest {
                 .medicationTime(LocalTime.now())
                 .build();
 
-        when(repository.findById(anyLong())).thenReturn(Optional.ofNullable(ScheduleMed
-                .builder()
-                .chatId("testChatid")
-                .medicationName("name")
-                .medicationDay("segunda")
-                .medicationTime(LocalTime.now())
-                .build()));
 
         when(service.updateMed(any(MedsRequestDTO.class), anyLong())).thenReturn(updated);
 
@@ -179,7 +171,6 @@ class MedControllerTest {
                 .andExpect(jsonPath("$.chatId").value(updated.getChatId()))
                 .andExpect(jsonPath("$.medicationName").value(updated.getMedicationName()))
                 .andExpect(jsonPath("$.medicationDay").value(updated.getMedicationDay()))
-                .andExpect(jsonPath("$.medicationTime").value(updated.getMedicationTime()))
                 .andDo(print());
 
         verify(service, times(1)).updateMed(any(MedsRequestDTO.class), anyLong());

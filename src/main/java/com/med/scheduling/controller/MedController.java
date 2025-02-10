@@ -123,7 +123,9 @@ public class MedController {
     )
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
     @ApiResponses(value = { //
-            @ApiResponse(responseCode = "201", description = "Cria medicamento na base"),
+            @ApiResponse(responseCode = "201", description = "Cria medicamento na base", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = MedsResponseIdDTO.class)
+            )),
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou ausentes no corpo da requisição", content = @Content(
                     mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
             )),
@@ -134,7 +136,10 @@ public class MedController {
     public ResponseEntity<MedsResponseIdDTO> createMed(
             @RequestBody MedsRequestDTO medsRequestDTO
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(medSerice.createMed(medsRequestDTO));
+        MedsResponseIdDTO response = medSerice.createMed(medsRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
     }
 
     @Operation(
@@ -148,6 +153,9 @@ public class MedController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou ausentes no corpo da requisição", content = @Content(
                     mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
             )),
+            @ApiResponse(responseCode = "404", description = "Medicamento para atualização não encontrado", content = @Content(
+                    mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
+            )),
             @ApiResponse(responseCode = "500", description = "Erro do servidor!", content = @Content(
                     mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErroControllerResponse.class)
             )),
@@ -156,6 +164,12 @@ public class MedController {
             @RequestBody  MedsRequestDTO medsRequestDTO,
             @PathVariable("id") Long id
     ) {
-        return ResponseEntity.ok(medSerice.updateMed(medsRequestDTO, id));
+        try {
+            MedsResponseDTO body = medSerice.updateMed(medsRequestDTO, id);
+            return ResponseEntity.ok(body);
+        } catch (NotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
+
     }
 }
