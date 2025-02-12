@@ -2,9 +2,11 @@ package com.med.scheduling.exception;
 
 import lombok.Generated;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
+@ResponseStatus
 public class ApplicationException extends RuntimeException {
     private final HttpStatus statusCode;
     private List<String> details;

@@ -1,7 +1,6 @@
 package com.med.scheduling.service;
 
 import com.med.scheduling.exception.ConvertTimeException;
-import com.med.scheduling.exception.NotFoundException;
 import com.med.scheduling.exception.ReminderDayException;
 import com.med.scheduling.exception.TelegramNotWorkingException;
 import com.med.scheduling.models.MedicationState;
@@ -21,7 +20,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

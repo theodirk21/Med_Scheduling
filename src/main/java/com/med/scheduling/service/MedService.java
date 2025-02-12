@@ -4,7 +4,7 @@ import com.med.scheduling.dto.MedsFilterDTO;
 import com.med.scheduling.dto.MedsRequestDTO;
 import com.med.scheduling.dto.MedsResponseDTO;
 import com.med.scheduling.dto.MedsResponseIdDTO;
-import com.med.scheduling.exception.NotFoundException;
+import com.med.scheduling.exception.NotFoundControllerException;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.repository.projection.CustomScheduleMed;
@@ -12,7 +12,9 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -43,11 +45,10 @@ public class MedService {
                 .build();
     }
 
-
     @Transactional
     public MedsResponseDTO updateMed(MedsRequestDTO medsRequestDTO, Long id) {
 
-        repository.findById(id).orElseThrow(NotFoundException::new);
+        repository.findById(id).orElseThrow(() -> new NotFoundControllerException("Medicamento não encontrado"));
 
         ScheduleMed med = ScheduleMed.builder()
                 .id(id)
@@ -65,7 +66,7 @@ public class MedService {
     @Transactional
     public void deleteMed(Long id) {
 
-        ScheduleMed scheduleMed = repository.findById(id).orElseThrow(NotFoundException::new);
+        ScheduleMed scheduleMed = repository.findById(id).orElseThrow(() -> new NotFoundControllerException("Medicamento não encontrado"));
 
         repository.delete(scheduleMed);
     }
@@ -74,7 +75,7 @@ public class MedService {
         List<ScheduleMed> scheduleMeds = repository.findAll();
 
         if(scheduleMeds.isEmpty()) {
-            throw new NotFoundException();
+            throw new NotFoundControllerException("Medicamento não encontrado");
         } else {
         return scheduleMeds.stream()
                 .map(scheduleMed -> mapper.map(scheduleMed, MedsResponseDTO.class))

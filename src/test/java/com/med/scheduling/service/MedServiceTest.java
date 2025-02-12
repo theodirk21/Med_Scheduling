@@ -4,7 +4,7 @@ import com.med.scheduling.dto.MedsFilterDTO;
 import com.med.scheduling.dto.MedsRequestDTO;
 import com.med.scheduling.dto.MedsResponseDTO;
 import com.med.scheduling.dto.MedsResponseIdDTO;
-import com.med.scheduling.exception.NotFoundException;
+import com.med.scheduling.exception.NotFoundControllerException;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.repository.projection.CustomScheduleMed;
@@ -122,9 +122,9 @@ class MedServiceTest {
 
     @Test
     void delete_NotFound(){
-        when(scheduleRepository.findById(anyLong())).thenThrow(new NotFoundException());
+        when(scheduleRepository.findById(anyLong())).thenThrow(new NotFoundControllerException("Medicamento não encontrado"));
 
-        assertThrows(NotFoundException.class, () -> service.deleteMed(anyLong()));
+        assertThrows(NotFoundControllerException.class, () -> service.deleteMed(anyLong()));
     }
 
     @Test
@@ -146,7 +146,7 @@ class MedServiceTest {
     void nothingToList(){
         when(scheduleRepository.findAll()).thenReturn(Collections.emptyList());
 
-        assertThrows(NotFoundException.class, () -> {
+        assertThrows(NotFoundControllerException.class, () -> {
             service.findAllMeds();
         });
     }

@@ -1,29 +1,23 @@
 package com.med.scheduling.controller;
 
 import com.med.scheduling.dto.*;
+import com.med.scheduling.exception.NotFoundControllerException;
 import com.med.scheduling.service.MedService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
-import org.springdoc.core.annotations.ParameterObject;
 
-import java.net.URI;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -56,7 +50,7 @@ public class MedController {
         try {
             List<MedsResponseDTO> allMeds = medSerice.findAllMeds();
             return ResponseEntity.ok(allMeds);
-        }catch (NotFoundException e){
+        }catch (NotFoundControllerException e){
             return ResponseEntity.notFound().build();
         }
 
@@ -164,12 +158,7 @@ public class MedController {
             @RequestBody  MedsRequestDTO medsRequestDTO,
             @PathVariable("id") Long id
     ) {
-        try {
             MedsResponseDTO body = medSerice.updateMed(medsRequestDTO, id);
             return ResponseEntity.ok(body);
-        } catch (NotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
-
     }
 }
