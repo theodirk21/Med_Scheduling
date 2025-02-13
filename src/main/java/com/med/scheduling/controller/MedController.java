@@ -1,7 +1,7 @@
 package com.med.scheduling.controller;
 
 import com.med.scheduling.dto.*;
-import com.med.scheduling.exception.NotFoundControllerException;
+
 import com.med.scheduling.service.MedService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,13 +47,8 @@ public class MedController {
             ))
     })
     public ResponseEntity<List<MedsResponseDTO>> findAllMeds() {
-        try {
             List<MedsResponseDTO> allMeds = medSerice.findAllMeds();
             return ResponseEntity.ok(allMeds);
-        }catch (NotFoundControllerException e){
-            return ResponseEntity.notFound().build();
-        }
-
     }
 
     @Operation(

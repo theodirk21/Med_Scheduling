@@ -1,7 +1,9 @@
 package com.med.scheduling.exception;
 
-public class ReminderDayException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ReminderDayException extends ApplicationException {
     public ReminderDayException(String e) {
-        super(e);
+        super(HttpStatus.BAD_REQUEST, e);
     }
 }

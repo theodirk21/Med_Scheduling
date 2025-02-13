@@ -6,6 +6,7 @@ import com.med.scheduling.dto.MedsRequestDTO;
 import com.med.scheduling.dto.MedsResponseDTO;
 import com.med.scheduling.dto.MedsResponseIdDTO;
 import com.med.scheduling.service.MedService;
+import javassist.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

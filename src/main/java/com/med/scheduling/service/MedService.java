@@ -4,21 +4,25 @@ import com.med.scheduling.dto.MedsFilterDTO;
 import com.med.scheduling.dto.MedsRequestDTO;
 import com.med.scheduling.dto.MedsResponseDTO;
 import com.med.scheduling.dto.MedsResponseIdDTO;
-import com.med.scheduling.exception.NotFoundControllerException;
+import com.med.scheduling.exception.NotFoundException;
+import com.med.scheduling.exception.ReminderDayException;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.repository.projection.CustomScheduleMed;
 import jakarta.transaction.Transactional;
+import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
+@Log4j2
 public class MedService {
 
     @Autowired
@@ -30,6 +34,9 @@ public class MedService {
 
     @Transactional
     public MedsResponseIdDTO createMed(MedsRequestDTO medsRequestDTO) {
+
+
+       validateDay(medsRequestDTO.getMedicationDay());
 
         ScheduleMed med = ScheduleMed.builder()
                 .medicationName(medsRequestDTO.getMedicationName())
@@ -45,28 +52,59 @@ public class MedService {
                 .build();
     }
 
+    private void validateDay(String medicationDay) {
+        if (medicationDay != null && !medicationDay.trim().isEmpty()) {
+            String regex = "\\b(domingo|segunda|terça|quarta|quinta|sexta|sábado)\\b";
+            Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(medicationDay.toLowerCase());
+
+            int count = 0;
+            while (matcher.find()) {
+                count++;
+            }
+
+            if (count == 0) {
+                throw new ReminderDayException("O dia precisa ser um dia da semana como 'segunda' ou 'terça'.");
+            } else if (count > 1) {
+                throw new ReminderDayException("É aceito apenas um dia por registro.");
+            }
+        } else {
+            throw new ReminderDayException("O dia da medicação não pode estar vazio.");
+        }
+    }
+
     @Transactional
     public MedsResponseDTO updateMed(MedsRequestDTO medsRequestDTO, Long id) {
 
-        repository.findById(id).orElseThrow(() -> new NotFoundControllerException("Medicamento não encontrado"));
+        ScheduleMed med = repository.findById(id).orElseThrow(NotFoundException::new);
 
-        ScheduleMed med = ScheduleMed.builder()
-                .id(id)
-                .medicationName(medsRequestDTO.getMedicationName())
-                .medicationTime(medsRequestDTO.getMedicationTime())
-                .medicationDay(medsRequestDTO.getMedicationDay())
-                .chatId(medsRequestDTO.getChatId())
-                .build();
+        if(medsRequestDTO.getMedicationDay() != null){
+            validateDay(medsRequestDTO.getMedicationDay());
+        }
 
-        ScheduleMed scheduleMed = repository.save(med);
+        updateMedFields(medsRequestDTO, med);
 
-        return mapper.map(scheduleMed, MedsResponseDTO.class);
+        return mapper.map(repository.save(med), MedsResponseDTO.class);
+    }
+
+    private static void updateMedFields(MedsRequestDTO medsRequestDTO, ScheduleMed med) {
+        if (medsRequestDTO.getMedicationName() != null) {
+            med.setMedicationName(medsRequestDTO.getMedicationName());
+        }
+        if (medsRequestDTO.getMedicationTime() != null) {
+            med.setMedicationTime(medsRequestDTO.getMedicationTime());
+        }
+        if (medsRequestDTO.getMedicationDay() != null) {
+            med.setMedicationDay(medsRequestDTO.getMedicationDay());
+        }
+        if (medsRequestDTO.getChatId() != null) {
+            med.setChatId(medsRequestDTO.getChatId());
+        }
     }
 
     @Transactional
     public void deleteMed(Long id) {
 
-        ScheduleMed scheduleMed = repository.findById(id).orElseThrow(() -> new NotFoundControllerException("Medicamento não encontrado"));
+        ScheduleMed scheduleMed = repository.findById(id).orElseThrow(NotFoundException::new);
 
         repository.delete(scheduleMed);
     }
@@ -74,13 +112,13 @@ public class MedService {
     public List<MedsResponseDTO> findAllMeds() {
         List<ScheduleMed> scheduleMeds = repository.findAll();
 
-        if(scheduleMeds.isEmpty()) {
-            throw new NotFoundControllerException("Medicamento não encontrado");
-        } else {
+        if (scheduleMeds.isEmpty()) throw new NotFoundException();
+
+
         return scheduleMeds.stream()
                 .map(scheduleMed -> mapper.map(scheduleMed, MedsResponseDTO.class))
                 .toList();
-        }
+
     }
 
     public List<MedsResponseDTO> findMedsByFilter(Pageable page, MedsFilterDTO paramsFilter) {
@@ -92,6 +130,8 @@ public class MedService {
                 paramsFilter != null ? paramsFilter.medicationName() : null,
                 page
         );
+
+        if (medsByFilter.isEmpty()) throw new NotFoundException();
 
         return medsByFilter.stream()
                 .map(filter -> mapper.map(filter, MedsResponseDTO.class))
