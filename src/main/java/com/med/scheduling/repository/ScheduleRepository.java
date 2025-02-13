@@ -25,7 +25,7 @@ public interface ScheduleRepository extends JpaRepository<ScheduleMed, Long> {
             "AND (:medicationDay IS NULL OR sm.medicationDay = :medicationDay) " +
             "AND (:medicationTime IS NULL OR sm.medicationTime = :medicationTime) " +
             "AND (:medicationName IS NULL OR sm.medicationName = :medicationName)")
-    List<CustomScheduleMed> findMedsByFilter(
+  List<CustomScheduleMed> findMedsByFilter(
             @Param("id") Long id,
             @Param("chatId") String chatId,
             @Param("medicationDay") String medicationDay,

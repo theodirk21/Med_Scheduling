@@ -10,11 +10,12 @@ import java.io.Serializable;
 import java.util.List;
 
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErroControllerResponse  implements Serializable {
 
         private String description;

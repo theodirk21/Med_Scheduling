@@ -1,37 +1,24 @@
 package com.med.scheduling.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.med.scheduling.MedSchedulingApplication;
 import com.med.scheduling.dto.MedsFilterDTO;
 import com.med.scheduling.dto.MedsRequestDTO;
 import com.med.scheduling.dto.MedsResponseDTO;
 import com.med.scheduling.dto.MedsResponseIdDTO;
-import com.med.scheduling.exception.NotFoundException;
-import com.med.scheduling.models.ScheduleMed;
-import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.service.MedService;
+import javassist.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;

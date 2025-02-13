@@ -5,9 +5,11 @@ import com.med.scheduling.dto.MedsRequestDTO;
 import com.med.scheduling.dto.MedsResponseDTO;
 import com.med.scheduling.dto.MedsResponseIdDTO;
 import com.med.scheduling.exception.NotFoundException;
+import com.med.scheduling.exception.ReminderDayException;
 import com.med.scheduling.models.ScheduleMed;
 import com.med.scheduling.repository.ScheduleRepository;
 import com.med.scheduling.repository.projection.CustomScheduleMed;
+import org.assertj.core.condition.Not;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +54,7 @@ class MedServiceTest {
         medDTO = MedsRequestDTO.builder()
                 .medicationName("Name")
                 .medicationTime(LocalTime.now())
-                .medicationDay("seg")
+                .medicationDay("segunda")
                 .chatId("chatID")
                 .build();
 
@@ -60,7 +62,7 @@ class MedServiceTest {
                 .id(5L)
                 .medicationName("Name")
                 .medicationTime(LocalTime.now())
-                .medicationDay("seg")
+                .medicationDay("segunda")
                 .chatId("chatID")
                 .build();
 
@@ -80,6 +82,110 @@ class MedServiceTest {
     }
 
     @Test
+    void creatMed_moretThanOneDay(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("Name")
+                .medicationTime(LocalTime.now())
+                .medicationDay("segunda, terça")
+                .chatId("chatID")
+                .build();
+
+        ReminderDayException ex = assertThrows(ReminderDayException.class, () -> service.createMed(medDTO));
+        assertEquals("É aceito apenas um dia por registro.", ex.getMessage());
+    }
+
+    @Test
+    void creatMed_DayWrongName(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("Name")
+                .medicationTime(LocalTime.now())
+                .medicationDay("seg")
+                .chatId("chatID")
+                .build();
+
+        ReminderDayException ex = assertThrows(ReminderDayException.class, () -> service.createMed(medDTO));
+        assertEquals("O dia precisa ser um dia da semana como 'segunda' ou 'terça'.", ex.getMessage());
+    }
+
+    @Test
+    void creatMed_DayEmpty(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("Name")
+                .medicationTime(LocalTime.now())
+                .medicationDay("")
+                .chatId("chatID")
+                .build();
+
+        ReminderDayException ex = assertThrows(ReminderDayException.class, () -> service.createMed(medDTO));
+        assertEquals("O dia da medicação não pode estar vazio.", ex.getMessage());
+    }
+
+    @Test
+    void updateMed_moretThanOneDay(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("NameAtt")
+                .medicationTime(LocalTime.now())
+                .medicationDay("segunda, terça")
+                .chatId("chatID")
+                .build();
+
+        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.ofNullable(med));
+        ReminderDayException ex = assertThrows(ReminderDayException.class, () -> service.updateMed(medDTO, 5L));
+        assertEquals("É aceito apenas um dia por registro.", ex.getMessage());
+    }
+
+    @Test
+    void updateMed_DayWrongName(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("NameAtt")
+                .medicationTime(LocalTime.now())
+                .medicationDay("seg")
+                .chatId("chatID")
+                .build();
+
+        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.ofNullable(med));
+        ReminderDayException ex = assertThrows(ReminderDayException.class, () -> service.updateMed(medDTO, 5L));
+        assertEquals("O dia precisa ser um dia da semana como 'segunda' ou 'terça'.", ex.getMessage());
+    }
+
+    @Test
+    void updateMed_DayEmpty(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("NameAtt")
+                .medicationTime(LocalTime.now())
+                .medicationDay("")
+                .chatId("chatID")
+                .build();
+
+        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.ofNullable(med));
+        ReminderDayException ex = assertThrows(ReminderDayException.class, () -> service.updateMed(medDTO, 5L));
+        assertEquals("O dia da medicação não pode estar vazio.", ex.getMessage());
+    }
+
+    @Test
+    void updateMed_NotFoundReference(){
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("NameAtt")
+                .medicationTime(LocalTime.now())
+                .medicationDay("seg")
+                .chatId("chatID")
+                .build();
+
+
+        assertThrows(NotFoundException.class, () -> service.updateMed(medDTO, 5L));
+
+    }
+
+
+
+    @Test
     void updateMed(){
 
         when(scheduleRepository.findById(anyLong())).thenReturn(Optional.ofNullable(med));
@@ -88,14 +194,14 @@ class MedServiceTest {
                 .id(5L)
                 .medicationName("NameAtt")
                 .medicationTime(LocalTime.now())
-                .medicationDay("seg")
+                .medicationDay("segunda")
                 .chatId("chatID")
                 .build();
 
         medDTO = MedsRequestDTO.builder()
                 .medicationName("NameAtt")
                 .medicationTime(LocalTime.now())
-                .medicationDay("seg")
+                .medicationDay("segunda")
                 .chatId("chatID")
                 .build();
 
@@ -111,6 +217,32 @@ class MedServiceTest {
     }
 
     @Test
+    void updateMed_JustOneInfo(){
+
+        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.ofNullable(med));
+
+        med = ScheduleMed.builder()
+                .id(5L)
+                .medicationName("NameAtt")
+                .medicationTime(LocalTime.now())
+                .medicationDay("segunda")
+                .chatId("chatID")
+                .build();
+
+        medDTO = MedsRequestDTO.builder()
+                .medicationName("NameAtt")
+                        .build();
+
+        when(scheduleRepository.save(any(ScheduleMed.class))).thenReturn(med);
+
+        MedsResponseDTO medsResponseDTO = service.updateMed(medDTO, 5L);
+
+        verify(scheduleRepository, times(1)).findById(anyLong());
+        verify(scheduleRepository, times(1)).save(any(ScheduleMed.class));
+        assertEquals(medDTO.getMedicationName(), medsResponseDTO.getMedicationName());
+    }
+
+    @Test
     void delete(){
         when(scheduleRepository.findById(anyLong())).thenReturn(Optional.ofNullable(med));
         doNothing().when(scheduleRepository).delete(any(ScheduleMed.class));
@@ -122,7 +254,7 @@ class MedServiceTest {
 
     @Test
     void delete_NotFound(){
-        when(scheduleRepository.findById(anyLong())).thenThrow(new NotFoundException());
+        when(scheduleRepository.findById(anyLong())).thenThrow(NotFoundException.class);
 
         assertThrows(NotFoundException.class, () -> service.deleteMed(anyLong()));
     }
@@ -174,19 +306,12 @@ class MedServiceTest {
     }
 
     @Test
-     void testFindMedsByFilter_NoResults_ReturnsEmptyList() {
+    void testFindMedsByFilter_NoResults_ReturnsEmptyList() {
         var paramsFilter = new MedsFilterDTO(null, null, "seg", null, "teste");
 
-        when(scheduleRepository.findMedsByFilter(eq(null), any(), any(), any(), any(), any(Pageable.class)))
-                .thenReturn(Collections.emptyList());
+        when(scheduleRepository.findMedsByFilter(isNull(), any(), any(), any(), any(), any(Pageable.class)))
+                .thenReturn(List.of());
 
-
-        List<MedsResponseDTO> result = service.findMedsByFilter(Pageable.ofSize(1), paramsFilter);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(scheduleRepository).findMedsByFilter(eq(null), any(), any(), any(), any(), any(Pageable.class));
-        verifyNoInteractions(mapper);
+        assertThrows(NotFoundException.class, () -> service.findMedsByFilter(Pageable.ofSize(1), paramsFilter));
     }
 }
